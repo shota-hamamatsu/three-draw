@@ -82,7 +82,7 @@ export const ThreeDrawCanvas: React.FC<ThreeDrawCanvasProps> = ({
 
       camera.aspect = newWidth / newHeight;
       camera.updateProjectionMatrix();
-      rendererRef.current.setSize(newWidth, newHeight, false);
+      rendererRef.current.setSize(newWidth, newHeight, true);
     };
 
     // set initial size in case container already has dimensions

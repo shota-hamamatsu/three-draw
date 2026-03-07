@@ -15,8 +15,20 @@ export function getIntersectionPoint(
   camera: THREE.Camera,
   plane: THREE.Plane
 ): THREE.Vector3 | null {
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  // Get the canvas element from the event target
+  const canvas = event.target instanceof HTMLCanvasElement ? event.target : null
+  if (!canvas) {
+    console.warn('getIntersectionPoint: Canvas element not found');
+    return null;
+  }
+
+  // Get the canvas position relative to the viewport
+  const rect = canvas.getBoundingClientRect();
+
+  // Convert mouse position to normalized device coordinates (-1 to 1)
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
   raycaster.setFromCamera(mouse, camera);
   const intersection = new THREE.Vector3();
   if (raycaster.ray.intersectPlane(plane, intersection)) {
