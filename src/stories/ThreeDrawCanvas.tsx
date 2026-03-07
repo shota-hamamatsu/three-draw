@@ -139,7 +139,7 @@ export const ThreeDrawCanvas: React.FC<ThreeDrawCanvasProps> = ({
     const controlsControl = { planeRotation: controlsRef.current.planeRotation };
     controlsFolder
       .add(controlsControl.planeRotation, 'x', -Math.PI, Math.PI, 0.1)
-      .name('Plane Rotation').onChange((value: number) => {
+      .name('Plane Rotation X').onChange((value: number) => {
         const newEuler = new THREE.Euler(value, controlsControl.planeRotation.y, controlsControl.planeRotation.z);
         controlsRef.current?.setPlaneRotation(newEuler);
         gridHelperRef.current?.setRotationFromEuler(newEuler);
