@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { DrawControls, type DrawControlsModes } from '../controls/DrawControls';
 import GUI from 'lil-gui';
