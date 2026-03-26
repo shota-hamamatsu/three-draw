@@ -54,9 +54,6 @@ export const ThreeDrawCanvas: React.FC<ThreeDrawCanvasProps> = ({
       alpha: true,
     });
     rendererRef.current = renderer;
-    renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
-    });
 
     // Controls setup
     const controls = new DrawControls({
@@ -71,6 +68,11 @@ export const ThreeDrawCanvas: React.FC<ThreeDrawCanvasProps> = ({
       controls.setCurrentMode(initialMode);
     }
     controlsRef.current = controls;
+
+    renderer.setAnimationLoop(() => {
+      controls.update();
+      renderer.render(scene, camera);
+    });
 
     // Handle window resize
     const handleResize = (): void => {

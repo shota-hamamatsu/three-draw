@@ -1,6 +1,7 @@
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import * as THREE from 'three';
 import { getIntersectionPoint } from '../utils/getIntersectionPoint';
+import { getRaycasterFromMouseEvent } from '../utils/getRaycasterFromMouseEvent';
 
 /**
  * DrawControlsMode defines the structure for a drawing mode, including the mode name and event handlers for mouse interactions.
@@ -28,6 +29,22 @@ export interface DrawControlsMode<TMode extends string = string> {
    * @param controls - The instance of DrawControls that is managing the drawing operation.
    */
   onMouseUp: (event: MouseEvent, controls: DrawControls<TMode>) => void;
+  /**
+   * Called every frame from the animation loop to update the mode's internal state and visuals.
+   * This is optional and can be used to keep visual feedback in sync with external changes.
+   * @param controls - The instance of DrawControls that is managing the drawing operation.
+   */
+  update?: (controls: DrawControls<TMode>) => void;
+  /**
+   * Called when the mode is activated. 
+   * This can be used to initialize any necessary state or visuals when the mode becomes active.
+   */
+  enterMode?: () => void;
+  /**
+   * Called when the mode is deactivated.
+   * This can be used to clean up any state or visuals when the mode is no longer active.
+   */
+  exitMode?: () => void;
   /**
    * Cancel the current drawing operation.
    * This can be used to abort the drawing process if needed (e.g., when the user presses the Escape key).
@@ -150,6 +167,7 @@ export class DrawControls<TMode extends string = string> {
   public setCurrentMode(modeName: TMode | null): boolean {
     // If modeName is null, disable drawing mode and enable orbiting only
     if (modeName === null) {
+      this._currentMode?.exitMode?.();
       this._currentMode = null;
       return true;
     }
@@ -158,7 +176,9 @@ export class DrawControls<TMode extends string = string> {
       console.warn(`DrawControls: Mode "${modeName}" not found.`);
       return false;
     }
+    this._currentMode?.exitMode?.();
     this._currentMode = mode;
+    this._currentMode?.enterMode?.();
     return true;
   }
 
@@ -202,11 +222,23 @@ export class DrawControls<TMode extends string = string> {
   }
 
   /**
+   * Get a THREE.Raycaster from the mouse event, taking into account the position of the mouse relative to the drawing target's DOM element and the camera.
+   * This can be used by drawing modes to perform raycasting against the scene for object selection or other interactions.
+   * @param event - The mouse event containing the screen coordinates of the mouse pointer.
+   * @returns - A THREE.Raycaster configured to intersect objects under the mouse pointer.
+   */
+  public getRaycasterFromMouseEvent(event: MouseEvent): THREE.Raycaster {
+    return getRaycasterFromMouseEvent(event, this._camera, this._orbitControls.domElement ??
+      (event.currentTarget instanceof HTMLElement ? event.currentTarget : undefined));
+  }
+
+  /**
    * This method is transfarred from OrbitControls.
    * It should be called in the animation loop to update the controls.
    */
   public update() {
     this._orbitControls.update();
+    this._currentMode?.update?.(this);
   }
 
   /**
@@ -215,8 +247,8 @@ export class DrawControls<TMode extends string = string> {
    */
   public dispose() {
     this._orbitControls.dispose();
-    Object.values(this._modes).forEach((mode) =>
-      (mode as DrawControlsMode<TMode> | undefined)?.dispose()
+    (Object.values(this._modes) as (DrawControlsMode<TMode> | undefined)[]).forEach((mode) =>
+      mode?.dispose()
     );
     // disconnect event listeners
     this._disconnectEventListeners();
